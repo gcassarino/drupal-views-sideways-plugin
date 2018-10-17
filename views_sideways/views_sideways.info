@@ -1,0 +1,7 @@
+name = Views Sideways
+description = Style plugin that displays results using the Sideways Fullscreen Image Gallery plugin for jQuery, http://manos.malihu.gr/sideways-jquery-fullscreen-image-gallery - 2013 Gianluca Cassarino gcassarino@gmail.com
+core = 6.x
+dependencies[] = "views"
+dependencies[] = "libraries"
+package = Views
+version = "6.x-1.0-beta"

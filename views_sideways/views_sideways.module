@@ -1,0 +1,157 @@
+<?php
+
+/**
+ * Implements hook_views_api().
+ */
+function views_sideways_views_api() {
+  return array(
+    'api' => 2.0,
+  );
+}
+
+/**
+ * Implementation of hook_theme 
+ */
+function views_sideways_theme($existing, $type, $theme, $path) {
+  return array(
+    'views_view__galleria_sideways__page' => array (
+      'arguments' => array('view' => NULL),
+      'template' => 'views-view--galleria-sideways--page',
+      'original hook' => 'views_view',
+      'path' => drupal_get_path('module', 'views_sideways'),
+      'preprocess functions' => array(
+        'template_preprocess',
+        'template_preprocess_views_view',
+        'views_sideways_preprocess_views_view__galleria_sideways__page',
+      ),
+    ),    
+  );
+}
+
+
+/**
+ * Theme preprocess function for views-view--galleria-sideways--page.tpl.php
+ */
+function views_sideways_preprocess_views_view__galleria_sideways__page(&$vars) {
+
+  //Create a new DOM document
+  $dom = new DOMDocument; 
+  //Parse the HTML. The @ is used to suppress any parsing errors
+  //that will be thrown if the $html string isn't valid XHTML.
+  @$dom->loadHTML($vars['rows']);
+  //Get all links. You could also use any other tag name here,
+  //like 'img' or 'table', to extract other tags.
+  $links = $dom->getElementsByTagName('a');  
+  //Iterate over the extracted links and display their URLs
+  $id = 0;
+  foreach ($links as $link){    
+    if($id == 0) {
+      //Extract and show the "href" attribute.
+      $vars['primaImmagine'] =  $link->getAttribute('href');
+    }
+    $id++;
+  }
+
+}
+
+/**
+* Theme preprocess function for views-sideways-view-row-unformatted.tpl.php
+* vedi anche http://drupal.org/node/223430
+* viene chiamato questo hook per ogni campo (field) definito nella vista
+*/
+function template_preprocess_views_sideways_view_row_unformatted(&$vars) {
+  
+  $view = $vars['view'];
+
+  // Loop through the fields for this view.
+  $inline = FALSE;
+  $vars['fields'] = array(); // ensure it's at least an empty array.
+  foreach ($view->field as $id => $field) {    
+    // render this even if set to exclude so it can be used elsewhere.
+    $field_output = $view->field[$id]->theme($vars['row']);
+    if (empty($field->options['exclude'])) {
+      $object = new stdClass();
+
+      $object->content = $field_output;
+
+      if (isset($view->field[$id]->field_alias) && isset($vars['row']->{$view->field[$id]->field_alias})) {
+        $object->raw = $vars['row']->{$view->field[$id]->field_alias};
+      }
+      else {
+        $object->raw = NULL; // make sure it exists to reduce NOTICE
+      }
+
+      $object->inline = !empty($vars['options']['inline'][$id]);
+      $object->inline_html = $object->inline ? 'span' : 'div';
+
+      // togliere il separatore
+      if (!empty($vars['options']['separator']) && $inline && $object->inline && $object->content) {
+        $object->separator = filter_xss_admin($vars['options']['separator']);
+      }
+               
+      $inline = $object->inline;
+
+      $object->handler = &$view->field[$id];
+      $object->element_type = $object->handler->element_type();
+
+      $object->class = views_css_safe($id);
+      $object->label = check_plain($view->field[$id]->label());
+      $vars['fields'][$id] = $object;      
+    }    
+  }
+}
+
+/**
+ * Theme preprocess function for views-sideways.tpl.php
+ */
+function template_preprocess_views_sideways(&$vars) {
+  
+  $vars['options']['sbEffect'] = (empty($vars['options']['sbEffect'])) ? 'easeInOutExpo' : filter_xss_admin($vars['options']['sbEffect']);
+ 
+  $sideways_module_path = libraries_get_path('sideways'); // mettere il plugin in libraries, dipendenza con modulo Libraries
+
+  drupal_add_css($sideways_module_path .'/default.css'); // default css. IMPORTANT!!! Include the stylesheet *BEFORE* the JavaScript (necessary for Safari 3.1.1)
+  drupal_add_js($sideways_module_path .'/js/jquery.min.js'); // IMPORTANT: sideways works with jQuery versions 1.4.4+ 
+  drupal_add_js($sideways_module_path .'/js/jquery-ui.min.js'); // necessaria jqueryUI 1.8 attualmente non disponibile in Drupal 6
+  drupal_add_js($sideways_module_path .'/js/jquery.easing.1.3.js');
+  drupal_add_js($sideways_module_path .'/js/jquery.mousewheel.min.js');
+
+  $js_options = array( 
+    'bgAutoColor' => $vars['options']['bgAutoColor'] ? true : false,    
+    'sbEffect' => $vars['options']['sbEffect'], 
+  );
+
+  drupal_add_js(array("view_{$vars['view']->name}" => $js_options), 'setting');
+
+  /** TODO:OPTIONAL EVENTS */
+  //$event_start = $vars['options']['animationStart'] ? file_get_contents($sideways_module_path . '/event_start.js') : 'function() {}';
+  //$event_completed = $vars['options']['animationComplete'] ? file_get_contents($sideways_module_path . '/event_completed.js') : 'function() {}';
+  //$event_sidewaysLoaded = $vars['options']['sidewaysLoaded'] ? file_get_contents($sideways_module_path . '/event_sidewaysLoaded.js') : 'function() {}';
+
+  // Drupal.behaviors.views_sideways is executed on document ready every page change, needed for ajax pager
+  // see http://drupal.org/node/1058168 about Drupal and JQuery versions.
+  if (Drupal.jsEnabled) {
+    drupal_add_js('
+    var $jq = jQuery.noConflict();        
+    (function($jq) {
+      function sideways_init() {
+	var sideways_settings_obj = Drupal.settings.view_'. $vars['view']->name.';
+	$jq(window).load(function() {
+	  $jq.ajax({
+	    type: "GET",
+	    url: "'. $sideways_module_path .'/js/sideways.js",      
+	    dataType: "script"
+	  }).done(function() {	      
+	      sidewaysInit(sideways_settings_obj.bgAutoColor, sideways_settings_obj.sbEffect);
+	    }).fail(function() {
+	      alert("error"); 
+	    }).always(function() { /* alert("complete"); */ });
+	});	
+      }     
+      Drupal.behaviors.views_sideways = function (context) {
+	sideways_init();	
+      };
+    })(jQuery);
+    ', 'inline', 'footer');
+  }
+}
