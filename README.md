@@ -14,7 +14,7 @@ The "views_sideways" archive contains the module: install as usual, dependencies
 
 **The "sideways-20022013.tgz" archive contains the adapted implementation of Sideways plugin created by Malihu, must be uncompressed and placed inside the "libraries" folder of Drupal.** The goal is to have the library within this folder "/sites/all/libraries/sideways/" (not tested in multi-site environment). Correct version of JQuery and other scripts are provided by Malihu's plugin.
 
-![alt text](http://www.quovadiscom.com/sites/default/files/galleria_sideways-settings.jpg "galleria_sideways settings") Access to plugin settings page (inside the view) to adjust the options. The module provides an interface to choose the animation effect and an option to tune the color of the background with the image above using html5 canvas. Needless to say, it does not work on IE8, and I think the 9 too etc. ..
+![galleria_sideways settings](http://www.quovadiscom.com/sites/default/files/galleria_sideways-settings.jpg "galleria_sideways settings") Access to plugin settings page (inside the view) to adjust the options. The module provides an interface to choose the animation effect and an option to tune the color of the background with the image above using html5 canvas. Needless to say, it does not work on IE8, and I think the 9 too etc. ..
 Works well in Firefox, Opera, and Chrome.
 
 Sideways module actually does not support 3 events: on start, stop and on load. The files event_init.js, event_slidesLoaded.js, event_completed.js are not used, you should implement by yourself as suggested inside the module.
