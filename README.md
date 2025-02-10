@@ -1,9 +1,9 @@
 # drupal-views-sideways-plugin
 Drupal 6 Views Style plugin that displays results using the [Sideways](http://manos.malihu.gr/sideways-jquery-fullscreen-image-gallery/) plugin for JQuery.
 
-[DEMO](http://www.quovadiscom.com/sideways)
+[DEMO](https://www.quovadiscom.com/old-site/www.quovadiscom.com/sideways/index.html)
 
-Sideways is a plugin for JQuery created by [Malihu](https://www.quovadiscom.com/old-site/www.quovadiscom.com/sideways/index.html). 
+Sideways is a plugin for JQuery created by [Malihu](http://manos.malihu.gr/sideways-jquery-fullscreen-image-gallery/). 
 Sideways uses jQuery 1.6.2. The method "jQuery.noConflict" is used to avoid breaking other scripts on the page.
 
 This module provides a new Style option called "sideways" when choosing the Display Style of the View.
